@@ -218,7 +218,11 @@ app.post('/api/inbox/delete', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ Xlusive server running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`✅ Xlusive server running on http://localhost:${PORT}`);
+  });
+}
 
+// Export the Express API for Vercel Serverless Functions
+module.exports = app;
