@@ -1,0 +1,73 @@
+/* ===== EMAIL CHECKER - extends PhoneChecker styles ===== */
+
+.email-checker {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.email-card {
+  background: rgba(10, 8, 28, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  border-radius: 20px;
+  padding: 36px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 30px rgba(6, 182, 212, 0.07);
+  width: 100%;
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  color: rgba(255, 255, 255, 0.9);
+  position: relative;
+  overflow: hidden;
+}
+
+.email-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.5), rgba(34, 211, 238, 0.4), transparent);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.email-card h2 {
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 10px;
+  font-size: 1.35em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Submit button - cyan accent for email */
+.submit-btn-email {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.8), rgba(59, 130, 246, 0.7)) !important;
+  border-color: rgba(6, 182, 212, 0.45) !important;
+}
+
+.submit-btn-email:hover:not(:disabled) {
+  box-shadow: 0 8px 24px rgba(6, 182, 212, 0.4), 0 0 16px rgba(34, 211, 238, 0.2) !important;
+  border-color: rgba(34, 211, 238, 0.7) !important;
+}
+
+/* Email-specific input focus */
+.email-card .phone-input:focus {
+  border-color: rgba(6, 182, 212, 0.6);
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1), 0 0 20px rgba(6, 182, 212, 0.07);
+}
+
+/* Info box - cyan accent */
+.email-card .info-box {
+  background: rgba(6, 182, 212, 0.05);
+  border-color: rgba(6, 182, 212, 0.14);
+  border-left-color: rgba(6, 182, 212, 0.4);
+}
+
+.email-card .info-box h3 {
+  color: rgba(34, 211, 238, 0.8);
+}
