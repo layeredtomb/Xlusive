@@ -282,27 +282,17 @@ const deleteEmailsByUid = async (email, password, uids) => {
     const imap = new Imap(config);
 
     imap.once('ready', () => {
-      imap.openBox('INBOX', false, async (err) => {
+      imap.openBox('INBOX', false, (err) => {
         if (err) { imap.end(); return reject(err); }
 
-        try {
-          const chunks = chunkArray(uids, 100);
-          for (const chunk of chunks) {
-            await new Promise((res, rej) => {
-              imap.addFlags(chunk, '\\Deleted', (err) => {
-                if (err) rej(err); else res();
-              });
-            });
-          }
-          // Expunge once all chunks are flagged
-          imap.expunge((err) => {
-            if (err) { imap.end(); return reject(err); }
+        imap.addFlags(uids, '\\Deleted', (err) => {
+          if (err) { imap.end(); return reject(err); }
+
+          imap.expunge((expErr) => {
+            if (expErr) { imap.end(); return reject(expErr); }
             imap.end();
           });
-        } catch (e) {
-          imap.end();
-          reject(e);
-        }
+        });
       });
     });
 
@@ -315,45 +305,36 @@ const deleteEmailsByUid = async (email, password, uids) => {
 // Move emails to Trash
 const moveEmailsToTrash = async (email, password, uids) => {
   return new Promise((resolve, reject) => {
+    if (!uids || uids.length === 0) return resolve({ moved: 0 });
+
     const config = getImapConfig(email, password);
     const imap = new Imap(config);
 
     imap.once('ready', () => {
-      // First find the Trash folder name
       imap.getBoxes((err, boxes) => {
         if (err) { imap.end(); return reject(err); }
 
         const trashFolder = findTrashFolder(boxes);
 
-        imap.openBox('INBOX', false, async (err) => {
+        imap.openBox('INBOX', false, (err) => {
           if (err) { imap.end(); return reject(err); }
 
-          try {
-            const chunks = chunkArray(uids, 100);
-            for (const chunk of chunks) {
-              await new Promise((res, rej) => {
-                if (trashFolder) {
-                  imap.move(chunk, trashFolder, (moveErr) => {
-                    if (moveErr) {
-                      // Fallback: just mark deleted
-                      imap.addFlags(chunk, '\\Deleted', (delErr) => delErr ? rej(delErr) : res());
-                    } else {
-                      res();
-                    }
-                  });
-                } else {
-                  imap.addFlags(chunk, '\\Deleted', (delErr) => delErr ? rej(delErr) : res());
-                }
-              });
-            }
-
-            // Expunge once at end for any deletions
-            imap.expunge((err) => {
+          const onFinish = (finalErr) => {
+            if (finalErr) console.error("Flag Error:", finalErr);
+            imap.expunge((expErr) => {
+              if (expErr) console.error("Expunge Error:", expErr);
               imap.end();
             });
-          } catch (e) {
-            imap.end();
-            reject(e);
+          };
+
+          if (trashFolder) {
+            // Attempt to move, then formally delete from origin INBOX
+            imap.move(uids, trashFolder, (moveErr) => {
+              imap.addFlags(uids, '\\Deleted', onFinish);
+            });
+          } else {
+            // No trash folder found, just flag as deleted in INBOX
+            imap.addFlags(uids, '\\Deleted', onFinish);
           }
         });
       });

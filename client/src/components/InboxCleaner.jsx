@@ -34,6 +34,7 @@ function InboxCleaner({ apiStatus }) {
   const [activeView, setActiveView] = useState('bulk') // bulk | junk | all
   const [deleting, setDeleting] = useState(false)
   const [deleteSuccess, setDeleteSuccess] = useState(null)
+  const [deleteProgress, setDeleteProgress] = useState(null)
 
   const handleConnect = async (e) => {
     e.preventDefault()
@@ -109,15 +110,44 @@ function InboxCleaner({ apiStatus }) {
 
     setDeleting(true)
     setError(null)
+    setDeleteSuccess(null)
+
+    const uidsArray = Array.from(selectedUids)
+    const total = uidsArray.length
+    setDeleteProgress({ current: 0, total })
+
+    // Helper to chunk the huge array securely into exact tiny segments to prevent serverless timeout
+    const chunkArray = (arr, size) => 
+      Array.from({ length: Math.ceil(arr.length / size) }, (v, i) =>
+        arr.slice(i * size, i * size + size)
+      );
+      
+    // Sent max 15 emails per backend instruction roundtrip
+    const chunks = chunkArray(uidsArray, 15);
+    
+    let deletedCount = 0;
+    let failedChunks = 0;
+
     try {
-      const response = await axios.post('/api/inbox/delete', {
-        email,
-        password,
-        uids: Array.from(selectedUids),
-      })
-      setDeleteSuccess(response.data.message)
-      // Remove deleted emails from results
-      const deletedSet = new Set(selectedUids)
+      for (const chunk of chunks) {
+        try {
+          await axios.post('/api/inbox/delete', {
+            email,
+            password,
+            uids: chunk,
+          });
+          deletedCount += chunk.length;
+          setDeleteProgress({ current: deletedCount, total });
+        } catch (postErr) {
+          console.error("Chunk failed", postErr);
+          failedChunks++;
+        }
+      }
+      
+      setDeleteSuccess(`Moved ${deletedCount} emails to trash${failedChunks > 0 ? ` (Failed to move ${failedChunks * 15})` : ''}.`)
+      
+      // Update UI 
+      const deletedSet = new Set(uidsArray)
       setScanResults(prev => ({
         ...prev,
         junkEmails: prev.junkEmails.filter(e => !deletedSet.has(e.uid)),
@@ -126,13 +156,14 @@ function InboxCleaner({ apiStatus }) {
           uids: s.uids.filter(uid => !deletedSet.has(uid)),
           count: s.uids.filter(uid => !deletedSet.has(uid)).length,
         })).filter(s => s.count > 0),
-        junkCount: prev.junkCount - deletedSet.size,
+        junkCount: Math.max(0, prev.junkCount - deletedCount),
       }))
       setSelectedUids(new Set())
     } catch (err) {
-      setError(err.response?.data?.error || 'Delete failed. Please try again.')
+      setError(err.response?.data?.error || 'Delete process interrupted.')
     } finally {
       setDeleting(false)
+      setTimeout(() => setDeleteProgress(null), 3000)
     }
   }
 
@@ -302,7 +333,7 @@ function InboxCleaner({ apiStatus }) {
           </div>
         </div>
         <div className="results-actions">
-          {selectedUids.size > 0 && (
+          {selectedUids.size > 0 && !deleteProgress && (
             <button
               className="delete-selected-btn"
               onClick={handleDeleteSelected}
@@ -314,16 +345,35 @@ function InboxCleaner({ apiStatus }) {
               }
             </button>
           )}
-          <button className="rescan-btn" onClick={runScan} disabled={loading}>
+          <button className="rescan-btn" onClick={runScan} disabled={loading || deleting}>
             {loading ? '🔄 Scanning...' : '🔄 Rescan'}
           </button>
-          <button className="logout-btn" onClick={() => { setStep('login'); setScanResults(null); setPassword('') }}>
+          <button className="logout-btn" onClick={() => { setStep('login'); setScanResults(null); setPassword('') }} disabled={deleting}>
             ← Back
           </button>
         </div>
       </div>
 
-      {deleteSuccess && (
+      {deleteProgress && (
+        <div className="progress-container" style={{ margin: '10px 24px 20px', padding: '16px', background: 'rgba(20, 15, 35, 0.6)', borderRadius: '12px', border: '1px solid rgba(168, 85, 247, 0.3)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '0.95em', color: '#c4b5fd', fontWeight: '500' }}>
+            <span><span className="spinner" style={{width:'12px',height:'12px', borderWidth:'2px'}}></span> Deleting in real-time...</span>
+            <span>{deleteProgress.current} / {deleteProgress.total} moved</span>
+          </div>
+          <div style={{ width: '100%', height: '10px', background: 'rgba(0, 0, 0, 0.4)', borderRadius: '6px', overflow: 'hidden', border: '1px solid rgba(168, 85, 247, 0.1)' }}>
+            <div style={{ 
+              width: `${(deleteProgress.current / deleteProgress.total) * 100}%`, 
+              height: '100%', 
+              background: 'linear-gradient(90deg, #ec4899, #a855f7, #3b82f6)', 
+              backgroundSize: '200% 200%',
+              animation: 'gradientShift 2s ease infinite',
+              transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)' 
+            }} />
+          </div>
+        </div>
+      )}
+
+      {deleteSuccess && !deleteProgress && (
         <div className="success-banner">✅ {deleteSuccess}</div>
       )}
       {error && <div className="inbox-error standalone">⚠️ {error}</div>}
