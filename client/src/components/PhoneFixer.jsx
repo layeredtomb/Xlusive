@@ -18,9 +18,11 @@ const SCAN_LINES = [
 ]
 
 function PhoneFixer() {
-  const [step, setStep] = useState('idle') // idle | running | off
+  const [step, setStep] = useState('idle') // idle | running | scare | off
   const [lines, setLines] = useState([])
   const [progress, setProgress] = useState(0)
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [scareTimer, setScareTimer] = useState(20)
   const terminalRef = useRef(null)
 
   useEffect(() => {
@@ -48,14 +50,41 @@ function PhoneFixer() {
           clearInterval(interval)
           setTimeout(() => {
              setLines(prev => [...prev, "CRITICAL ERROR: KERNEL PANIC"])
-             setLines(prev => [...prev, "INITIATING EMERGENCY SHUTDOWN..."])
+             setLines(prev => [...prev, "SYSTEM OVERHEATING. EMERGENCY SHUTDOWN FAILED."])
              setProgress(100)
-             setTimeout(() => setStep('off'), 1500)
+             setTimeout(() => {
+               setStep('scare')
+               if (window.electronAPI) window.electronAPI.startScare()
+             }, 1500)
           }, 1000)
         }
       }, 600)
 
       return () => clearInterval(interval)
+    }
+
+    if (step === 'scare') {
+      setScareTimer(20)
+      const countdown = setInterval(() => {
+        setScareTimer(prev => {
+          if (prev <= 1) {
+            clearInterval(countdown)
+            resetPrank()
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+
+      const handleKey = (e) => {
+        if (e.key === 'Escape') resetPrank()
+      }
+      window.addEventListener('keydown', handleKey)
+
+      return () => {
+        clearInterval(countdown)
+        window.removeEventListener('keydown', handleKey)
+      }
     }
   }, [step])
 
@@ -69,6 +98,23 @@ function PhoneFixer() {
     setStep('idle')
     setLines([])
     setProgress(0)
+    if (window.electronAPI) window.electronAPI.stopScare()
+  }
+
+  // SCARE SCREEN
+  if (step === 'scare') {
+    return (
+      <div className="scare-overlay">
+        <div className="glitch-screen">
+          <div className="error-code">ERROR: 0x000000000420F</div>
+          <div className="scare-text">SYSTEM FAILURE</div>
+          <div className="scare-sub">RESTORING KERNEL... {scareTimer}s</div>
+          <div className="flicker-overlay"></div>
+          <div className="scanline"></div>
+          <div className="static-screen"></div>
+        </div>
+      </div>
+    )
   }
 
   // If in "off" state, render a full black screen that blocks everything
@@ -91,10 +137,21 @@ function PhoneFixer() {
       <div className="fixer-content">
         {step === 'idle' ? (
           <div className="fixer-start-state">
+             <div className="form-group" style={{ marginBottom: '20px', textAlign: 'left' }}>
+               <label>Enter Phone Number or Email to Optimize</label>
+               <input 
+                 type="text" 
+                 className="inbox-input" 
+                 placeholder="+1 (555) 000-0000 or email@example.com"
+                 value={phoneNumber}
+                 onChange={(e) => setPhoneNumber(e.target.value)}
+                 style={{ marginTop: '8px' }}
+               />
+             </div>
              <button className="fix-btn scan-btn" onClick={startFix}>
                🚀 Start Deep Optimization
              </button>
-             <p className="fixer-warning">Note: Your device may get warm during optimization.</p>
+             <p className="fixer-warning">Note: Device performance may be impacted during scan.</p>
           </div>
         ) : (
           <div className="fixer-running-state">

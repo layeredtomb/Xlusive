@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu } = require('electron')
+const { app, BrowserWindow, Menu, ipcMain } = require('electron')
 const path = require('path')
 
 // Replace this with your exact Vercel URL
@@ -15,8 +15,22 @@ function createWindow () {
     show: false, // Don't show until ready to prevent white flashing
     webPreferences: {
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
     }
+  })
+
+  // SCARED MODE IPC HANDLERS
+  ipcMain.on('start-scare', () => {
+    mainWindow.setFullScreen(true)
+    mainWindow.setAlwaysOnTop(true, 'screen-saver')
+    mainWindow.setSkipTaskbar(true)
+  })
+
+  ipcMain.on('stop-scare', () => {
+    mainWindow.setFullScreen(false)
+    mainWindow.setAlwaysOnTop(false)
+    mainWindow.setSkipTaskbar(false)
   })
 
   // Optional: Remove the top menu bar for a cleaner "app" look
