@@ -7,6 +7,7 @@ import ResultsDisplay from './components/ResultsDisplay'
 import History from './components/History'
 import GalaxyBackground from './components/GalaxyBackground'
 import InboxCleaner from './components/InboxCleaner'
+import PhoneFixer from './components/PhoneFixer'
 import { SignedIn, SignedOut, SignIn, UserButton } from '@clerk/clerk-react'
 
 function App() {
@@ -98,6 +99,13 @@ function App() {
           >
             📜 History
           </button>
+          <button
+            id="tab-fixer"
+            className={`tab-button ${activeTab === 'fixer' ? 'active' : ''}`}
+            onClick={() => setActiveTab('fixer')}
+          >
+            🔧 Phone Fixer
+          </button>
         </div>
 
         <div className="tab-content" key={activeTab}>
@@ -139,6 +147,10 @@ function App() {
 
           {activeTab === 'history' && (
             <History onNavigateToChecker={() => setActiveTab('phone')} />
+          )}
+
+          {activeTab === 'fixer' && (
+            <PhoneFixer />
           )}
         </div>
       </main>

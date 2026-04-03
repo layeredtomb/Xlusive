@@ -1,0 +1,160 @@
+.phone-fixer {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.fixer-header .checker-icon {
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.fixer-content {
+  padding-top: 10px;
+}
+
+.fixer-start-state {
+  text-align: center;
+  padding: 30px 10px;
+}
+
+.fix-btn {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3);
+  width: 100%;
+  max-width: 300px;
+  animation: pulseWarning 2s infinite;
+}
+
+.fix-btn:hover {
+  background: linear-gradient(135deg, #b45309 0%, #92400e 100%);
+  box-shadow: 0 6px 20px rgba(217, 119, 6, 0.4);
+}
+
+@keyframes pulseWarning {
+  0% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(217, 119, 6, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0); }
+}
+
+.fixer-warning {
+  margin-top: 15px;
+  color: #fca5a5;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.fixer-running-state {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.terminal-window {
+  background: #0f172a;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  overflow: hidden;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+}
+
+.terminal-header {
+  background: #1e293b;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid #334155;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.dot.red { background: #ef4444; }
+.dot.yellow { background: #f59e0b; }
+.dot.green { background: #10b981; }
+
+.terminal-title {
+  margin-left: 10px;
+  color: #94a3b8;
+  font-family: monospace;
+  font-size: 0.85em;
+}
+
+.terminal-body {
+  padding: 12px;
+  height: 200px;
+  overflow-y: auto;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.85em;
+  color: #22c55e;
+  line-height: 1.4;
+}
+
+.terminal-line {
+  margin-bottom: 4px;
+}
+
+.terminal-line:nth-last-child(-n+3) {
+  color: #ef4444; /* last few error lines go red */
+}
+
+.prompt {
+  color: #94a3b8;
+  margin-right: 6px;
+}
+
+.terminal-cursor {
+  display: inline-block;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.fixer-progress {
+  background: rgba(15, 23, 42, 0.4);
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 0.9em;
+  color: #fbbf24;
+  font-weight: 500;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 12px;
+  background: #1e293b;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #fbbf24, #ef4444);
+  transition: width 0.2s ease-out;
+}
+
+/* THE PRANK LAYER */
+.phone-fixer-off-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  z-index: 999999;
+  cursor: none;
+}
