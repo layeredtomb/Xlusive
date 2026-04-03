@@ -289,7 +289,7 @@ const deleteEmailsByUid = async (email, password, uids) => {
           const chunks = chunkArray(uids, 100);
           for (const chunk of chunks) {
             await new Promise((res, rej) => {
-              imap.uid.addFlags(chunk, '\\Deleted', (err) => {
+              imap.addFlags(chunk, '\\Deleted', (err) => {
                 if (err) rej(err); else res();
               });
             });
@@ -333,16 +333,16 @@ const moveEmailsToTrash = async (email, password, uids) => {
             for (const chunk of chunks) {
               await new Promise((res, rej) => {
                 if (trashFolder) {
-                  imap.uid.move(chunk, trashFolder, (moveErr) => {
+                  imap.move(chunk, trashFolder, (moveErr) => {
                     if (moveErr) {
                       // Fallback: just mark deleted
-                      imap.uid.addFlags(chunk, '\\Deleted', (delErr) => delErr ? rej(delErr) : res());
+                      imap.addFlags(chunk, '\\Deleted', (delErr) => delErr ? rej(delErr) : res());
                     } else {
                       res();
                     }
                   });
                 } else {
-                  imap.uid.addFlags(chunk, '\\Deleted', (delErr) => delErr ? rej(delErr) : res());
+                  imap.addFlags(chunk, '\\Deleted', (delErr) => delErr ? rej(delErr) : res());
                 }
               });
             }
