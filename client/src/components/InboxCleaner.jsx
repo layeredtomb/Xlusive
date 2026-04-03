@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import axios from 'axios'
 import './InboxCleaner.css'
 
@@ -15,7 +15,18 @@ function InboxCleaner({ apiStatus }) {
   const [step, setStep] = useState('login') // login | scanning | results
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('inboxEmail')
+    const savedPassword = localStorage.getItem('inboxPassword')
+    if (savedEmail) setEmail(savedEmail)
+    if (savedPassword) {
+      setPassword(savedPassword)
+      setRememberMe(true)
+    }
+  }, [])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [scanResults, setScanResults] = useState(null)
@@ -33,6 +44,15 @@ function InboxCleaner({ apiStatus }) {
     setLoading(true)
     try {
       await axios.post('/api/inbox/connect', { email, password })
+      
+      if (rememberMe) {
+        localStorage.setItem('inboxEmail', email)
+        localStorage.setItem('inboxPassword', password)
+      } else {
+        localStorage.removeItem('inboxEmail')
+        localStorage.removeItem('inboxPassword')
+      }
+
       // Connection OK — now scan
       setStep('scanning')
       await runScan()
@@ -183,6 +203,19 @@ function InboxCleaner({ apiStatus }) {
                     {showPassword ? '🙈' : '👁️'}
                   </button>
                 </div>
+              </div>
+
+              <div className="form-group remember-me-group" style={{ flexDirection: 'row', alignItems: 'center', marginTop: '-5px', marginBottom: '20px' }}>
+                <label className="checkbox-label" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.9em', color: 'rgba(200, 190, 255, 0.7)', fontWeight: 'normal' }}>
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    disabled={loading}
+                    style={{ width: '16px', height: '16px', accentColor: '#7c3aed' }}
+                  />
+                  <span>Remember me securely on this device</span>
+                </label>
               </div>
 
               {error && (
