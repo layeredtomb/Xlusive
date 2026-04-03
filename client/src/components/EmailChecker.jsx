@@ -36,7 +36,12 @@ function EmailChecker({ apiStatus }) {
       : `mailto:?subject=${encodeURIComponent(`FORMAL DATA REMOVAL DEMAND (GDPR/CCPA) - ${leak.name}`)}&body=${encodeURIComponent(
           `To Whom It May Concern at ${leak.name},\n\nPursuant to my rights under the General Data Protection Regulation (GDPR) and the California Consumer Privacy Act (CCPA), I am formally demanding the immediate and complete erasure of my personal data (including my email address) from your records and any third-party affiliates.\n\nBreach Source Identified: ${leak.name}\nDate of Breach: ${leak.date}\n\nI expect confirmation of this deletion within the legally mandated 30-day timeframe. Failure to comply will result in a formal complaint to the relevant data protection authorities.\n\nThank you,`
         )}`
-    window.open(removalUrl, '_blank')
+    
+    if (removalUrl.startsWith('mailto:')) {
+      window.location.href = removalUrl
+    } else {
+      window.open(removalUrl, '_blank')
+    }
   }
 
   const handleSubmit = async (e) => {

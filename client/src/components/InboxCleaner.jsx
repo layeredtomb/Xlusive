@@ -172,8 +172,15 @@ function InboxCleaner({ apiStatus }) {
     // Clean up mailto: and angle brackets in List-Unsubscribe header
     const cleaned = link.replace(/<|>/g, '').trim()
     const parts = cleaned.split(',').map(s => s.trim().replace(/<|>/g, ''))
-    const url = parts.find(p => p.startsWith('http')) || parts[0]
-    if (url) window.open(url, '_blank')
+    const url = parts.find(p => p.startsWith('http')) || parts.find(p => p.startsWith('mailto:')) || parts[0]
+    
+    if (url) {
+      if (url.toLowerCase().startsWith('mailto:')) {
+        window.location.href = url;
+      } else {
+        window.open(url, '_blank');
+      }
+    }
   }
 
   // ──────────────────────────── RENDER ────────────────────────────

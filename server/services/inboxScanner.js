@@ -381,7 +381,7 @@ const findTrashFolder = (boxes, prefix = '') => {
   for (const [name, box] of Object.entries(boxes || {})) {
     const fullName = prefix ? `${prefix}${name}` : name;
     const attribs = box.attribs || [];
-    if (attribs.includes('\\Trash') || /trash|deleted/i.test(name)) {
+    if (attribs.includes('\\Trash') || /trash|deleted|bin|rubbish/i.test(name)) {
       return fullName;
     }
     if (box.children) {
