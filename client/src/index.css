@@ -79,11 +79,17 @@ body {
 }
 
 .header-content {
-  max-width: 700px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  max-width: 1060px;
   margin: 0 auto;
+  text-align: left;
 }
 
-.header-content h1 {
+.header-title-area h1 {
   font-size: clamp(1.8em, 4vw, 2.8em);
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -95,12 +101,55 @@ body {
   line-height: 1.2;
 }
 
-.header-content > p {
+.header-title-area p {
   font-size: 1.05em;
   color: var(--text-secondary);
-  margin-bottom: 18px;
+  margin-bottom: 0;
   font-weight: 400;
   letter-spacing: 0.01em;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* ========== CLERK AUTH ========== */
+.auth-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  position: relative;
+  z-index: 10;
+  animation: fadeSlideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0 20px;
+}
+
+.auth-branding {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.auth-branding h1 {
+  font-size: 3.5em;
+  font-weight: 800;
+  background: linear-gradient(135deg, #fff 0%, var(--neon-cyan) 40%, var(--neon-purple) 80%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+  line-height: 1.1;
+}
+
+.auth-branding p {
+  color: var(--text-secondary);
+  font-size: 1.1em;
+  max-width: 450px;
+  margin: 0 auto;
 }
 
 .status-indicator {

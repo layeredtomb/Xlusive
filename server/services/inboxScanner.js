@@ -272,6 +272,9 @@ const scanInbox = async (email, password) => {
   };
 };
 
+// Helper for chunking UIDs to avoid socket overloads
+const chunkArray = (arr, size) => arr.length ? [arr.slice(0, size), ...chunkArray(arr.slice(size), size)] : [];
+
 // Delete emails by UID
 const deleteEmailsByUid = async (email, password, uids) => {
   return new Promise((resolve, reject) => {
@@ -279,19 +282,27 @@ const deleteEmailsByUid = async (email, password, uids) => {
     const imap = new Imap(config);
 
     imap.once('ready', () => {
-      imap.openBox('INBOX', false, (err) => {
+      imap.openBox('INBOX', false, async (err) => {
         if (err) { imap.end(); return reject(err); }
 
-        // Mark as deleted
-        imap.uid.addFlags(uids, '\\Deleted', (err) => {
-          if (err) { imap.end(); return reject(err); }
-
-          // Expunge to permanently remove
+        try {
+          const chunks = chunkArray(uids, 100);
+          for (const chunk of chunks) {
+            await new Promise((res, rej) => {
+              imap.uid.addFlags(chunk, '\\Deleted', (err) => {
+                if (err) rej(err); else res();
+              });
+            });
+          }
+          // Expunge once all chunks are flagged
           imap.expunge((err) => {
             if (err) { imap.end(); return reject(err); }
             imap.end();
           });
-        });
+        } catch (e) {
+          imap.end();
+          reject(e);
+        }
       });
     });
 
@@ -314,26 +325,35 @@ const moveEmailsToTrash = async (email, password, uids) => {
 
         const trashFolder = findTrashFolder(boxes);
 
-        imap.openBox('INBOX', false, (err) => {
+        imap.openBox('INBOX', false, async (err) => {
           if (err) { imap.end(); return reject(err); }
 
-          if (trashFolder) {
-            imap.uid.move(uids, trashFolder, (err) => {
-              if (err) {
-                // Fallback: just mark deleted
-                imap.uid.addFlags(uids, '\\Deleted', (err2) => {
-                  if (err2) { imap.end(); return reject(err2); }
-                  imap.expunge(() => imap.end());
-                });
-              } else {
-                imap.end();
-              }
+          try {
+            const chunks = chunkArray(uids, 100);
+            for (const chunk of chunks) {
+              await new Promise((res, rej) => {
+                if (trashFolder) {
+                  imap.uid.move(chunk, trashFolder, (moveErr) => {
+                    if (moveErr) {
+                      // Fallback: just mark deleted
+                      imap.uid.addFlags(chunk, '\\Deleted', (delErr) => delErr ? rej(delErr) : res());
+                    } else {
+                      res();
+                    }
+                  });
+                } else {
+                  imap.uid.addFlags(chunk, '\\Deleted', (delErr) => delErr ? rej(delErr) : res());
+                }
+              });
+            }
+
+            // Expunge once at end for any deletions
+            imap.expunge((err) => {
+              imap.end();
             });
-          } else {
-            imap.uid.addFlags(uids, '\\Deleted', (err) => {
-              if (err) { imap.end(); return reject(err); }
-              imap.expunge(() => imap.end());
-            });
+          } catch (e) {
+            imap.end();
+            reject(e);
           }
         });
       });

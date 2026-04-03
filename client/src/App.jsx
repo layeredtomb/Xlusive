@@ -7,6 +7,7 @@ import ResultsDisplay from './components/ResultsDisplay'
 import History from './components/History'
 import GalaxyBackground from './components/GalaxyBackground'
 import InboxCleaner from './components/InboxCleaner'
+import { SignedIn, SignedOut, SignIn, UserButton } from '@clerk/clerk-react'
 
 function App() {
   const [activeTab, setActiveTab] = useState('phone')
@@ -31,19 +32,35 @@ function App() {
     <div className="app">
       <GalaxyBackground />
 
-      <header className="app-header">
-        <div className="header-content">
-          <h1>⚡ Xlusive</h1>
-          <p>Check if your phone or email has been exposed in a data breach</p>
-          <div className="status-indicator">
-            {apiStatus ? (
-              <span className="status-online">Server Connected</span>
-            ) : (
-              <span className="status-offline">Server Offline</span>
-            )}
+      <SignedOut>
+        <div className="auth-container">
+          <div className="auth-branding">
+            <h1>⚡ Xlusive</h1>
+            <p>Sign in to secure your data and scan your privacy footprint.</p>
           </div>
+          <SignIn appearance={{ elements: { formButtonPrimary: 'auth-btn' } }} />
         </div>
-      </header>
+      </SignedOut>
+
+      <SignedIn>
+        <header className="app-header">
+          <div className="header-content">
+            <div className="header-title-area">
+              <h1>⚡ Xlusive</h1>
+              <p>Check if your phone or email has been exposed in a data breach</p>
+            </div>
+            <div className="header-actions">
+              <div className="status-indicator">
+                {apiStatus ? (
+                  <span className="status-online">System Online</span>
+                ) : (
+                  <span className="status-offline">Connecting...</span>
+                )}
+              </div>
+              <UserButton />
+            </div>
+          </div>
+        </header>
 
       <main className="app-main">
         {!apiStatus && (
@@ -126,9 +143,10 @@ function App() {
         </div>
       </main>
 
-      <footer className="app-footer">
-        ⚡ Xlusive — Your privacy matters. Check your own data only.
-      </footer>
+        <footer className="app-footer">
+          ⚡ Xlusive — Your privacy matters. Check your own data only.
+        </footer>
+      </SignedIn>
     </div>
   )
 }
